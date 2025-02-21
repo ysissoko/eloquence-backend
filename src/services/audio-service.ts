@@ -33,7 +33,7 @@ export async function convertAudioToPushStream(audioUrl: string): Promise<AudioI
         // Fetch audio file
         const fetchedStream = await downloadAudioFile(audioUrl);
         const outputStream = new stream.PassThrough();
-        await ffmpeg(fetchedStream)
+        ffmpeg(fetchedStream)
             .audioCodec("pcm_s16le")
             .audioChannels(1)
             .audioFrequency(16000)
