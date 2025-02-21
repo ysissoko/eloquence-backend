@@ -1,6 +1,9 @@
 import axios from "axios";
 import stream from "stream";
 import { AudioInputStream, PushAudioInputStream } from "microsoft-cognitiveservices-speech-sdk";
+const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
+import ffmpeg from "fluent-ffmpeg";
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 export async function downloadAudioFile(audioUrl: string): Promise<stream.Readable> {
     const { data: fetchedStream } = await axios<stream.Readable>({
@@ -24,20 +27,31 @@ export async function downloadAudioFile(audioUrl: string): Promise<stream.Readab
  * - Format: WAV
  */
 export async function convertAudioToPushStream(audioUrl: string): Promise<AudioInputStream> {
-    // let audioStream: stream.Readable | null = null;
     let pushStream: PushAudioInputStream | null = null;
 
     try {
         // Fetch audio file
         const fetchedStream = await downloadAudioFile(audioUrl);
+        const outputStream = new stream.PassThrough();
+        await ffmpeg(fetchedStream)
+            .audioCodec("pcm_s16le")
+            .audioChannels(1)
+            .audioFrequency(16000)
+            .format("wav")
+            .on("error", (err) => {
+                console.error("FFmpeg error:", err);
+                throw err;
+            })
+            .pipe(outputStream, { end: true });
+
         // Set up conversion pipeline
         // outputStream = new stream.PassThrough();
         pushStream = AudioInputStream.createPushStream();
 
         // Handle stream events
-        fetchedStream.on("data", (chunk) => pushStream?.write(chunk));
-        fetchedStream.on("end", () => pushStream?.close());
-        fetchedStream.on("error", (err) => {
+        outputStream.on("data", (chunk) => pushStream?.write(chunk));
+        outputStream.on("end", () => pushStream?.close());
+        outputStream.on("error", (err) => {
             throw new Error(`Output stream error: ${err.message}`);
         });
 
