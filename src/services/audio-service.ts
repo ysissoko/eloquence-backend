@@ -1,8 +1,9 @@
 import axios from "axios";
-import stream from "stream";
-import { AudioInputStream, PushAudioInputStream } from "microsoft-cognitiveservices-speech-sdk";
-const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 import ffmpeg from "fluent-ffmpeg";
+import { createReadStream } from "fs";
+import { AudioInputStream, PushAudioInputStream } from "microsoft-cognitiveservices-speech-sdk";
+import stream from "stream";
+const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 export async function downloadAudioFile(audioUrl: string): Promise<stream.Readable> {
@@ -13,7 +14,7 @@ export async function downloadAudioFile(audioUrl: string): Promise<stream.Readab
     });
 
     return fetchedStream;
-}   
+}
 /**
  * Convert an audio file to a WAV file and return a push stream
  * @param audioUrl The URL of the audio file to convert
@@ -31,7 +32,8 @@ export async function convertAudioToPushStream(audioUrl: string): Promise<AudioI
 
     try {
         // Fetch audio file
-        const fetchedStream = await downloadAudioFile(audioUrl);
+        // const fetchedStream = await downloadAudioFile(audioUrl);
+        const fetchedStream = await createLocalFileStream("../samples/good-morning-242169.mp3");
         const outputStream = new stream.PassThrough();
         ffmpeg(fetchedStream)
             .audioCodec("pcm_s16le")
@@ -61,4 +63,9 @@ export async function convertAudioToPushStream(audioUrl: string): Promise<AudioI
         pushStream?.close();
         throw err instanceof Error ? err : new Error(String(err));
     }
+}
+
+// New function to create a read stream from a local file
+export function createLocalFileStream(filePath: string): stream.Readable {
+    return createReadStream(filePath);
 }
