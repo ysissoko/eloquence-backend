@@ -27,6 +27,7 @@ export default class App {
         }));
         this.app.use(express.json());
         this.app.use(verifyToken);
+        this.app.set('trust proxy', 1);
     }
 
     private initializeRoutes() {
