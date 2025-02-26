@@ -26,7 +26,7 @@ export default class App {
             windowMs: 15 * 60 * 1000, // 15 minutes
         }));
         this.app.use(express.json());
-        // this.app.use(verifyToken);
+        this.app.use(verifyToken);
     }
 
     private initializeRoutes() {
