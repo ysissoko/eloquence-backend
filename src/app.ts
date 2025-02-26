@@ -1,14 +1,14 @@
+import cors from 'cors';
 import dotenv from 'dotenv';
 dotenv.config();
-import helmet from 'helmet';
-import cors from 'cors';
-import rateLimit from 'express-rate-limit';
 import express from 'express';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 import verifyToken from './middlewares/verify-auth-token';
 
 // Routes
-import speechAssessmentRoutes from './routes/speech-assessment.route';
 import chatRoutes from './routes/chat.route';
+import speechAssessmentRoutes from './routes/speech-assessment.route';
 
 export default class App {
     private app: express.Application;
@@ -26,7 +26,7 @@ export default class App {
             windowMs: 15 * 60 * 1000, // 15 minutes
         }));
         this.app.use(express.json());
-        this.app.use(verifyToken);
+        // this.app.use(verifyToken);
     }
 
     private initializeRoutes() {

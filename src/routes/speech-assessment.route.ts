@@ -15,6 +15,7 @@ speechAssessmentRoutes.post('/', asyncHandler(async (req: Request, res: Response
     // Vérifier si les paramètres nécessaires sont présents
     if (!apiKey || !serviceRegion || !speechLanguage || !audio_url || !reference_text) {
         res.status(400).json({ error: 'Paramètres manquants' });
+        return;
     }
 
     const azureTtsService: AzureClient = new AzureClient(apiKey as string, serviceRegion as string, speechLanguage as string);
