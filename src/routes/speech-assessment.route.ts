@@ -22,6 +22,7 @@ speechAssessmentRoutes.post('/', asyncHandler(async (req: Request, res: Response
 
     try {
         const result: SpeechAssessmentResult = await azureTtsService.speechAssessment(reference_text, audio_url);
+        console.log("Résultat de l'évaluation de la prononciation:", result);
         res.json(result);
     } catch (error) {
         console.error('Erreur lors de l\'évaluation de la prononciation:', error);

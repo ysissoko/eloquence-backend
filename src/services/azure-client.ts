@@ -25,7 +25,7 @@ export default class AzureClient {
     async speechAssessment(referenceText: string, audioUrl: string): Promise<SpeechAssessmentResult> {
         // Télécharger l'audio et le convertir en WAV
         const wavStream: AudioInputStream = await convertAudioToPushStream(audioUrl);
-
+        console.log("Audio converted to WAV");
         const audioConfig: AudioConfig = AudioConfig.fromStreamInput(wavStream);
         const speechRecognizer = new SpeechRecognizer(this.speechConfig, audioConfig);
         const pronunciationAssessmentConfig = new PronunciationAssessmentConfig(
@@ -39,9 +39,11 @@ export default class AzureClient {
         pronunciationAssessmentConfig.applyTo(speechRecognizer);
 
         return new Promise((resolve, reject) => {
+            console.log("Starting speech recognition");
             speechRecognizer.recognizeOnceAsync(async (result) => {
                 try {
                     if (result.reason === ResultReason.RecognizedSpeech) {
+                        console.info("Speech recognized");
                         const pronunciationResult = PronunciationAssessmentResult.fromResult(result);
 
                         const assessmentResult = {
@@ -56,6 +58,7 @@ export default class AzureClient {
                         speechRecognizer.close();
                         resolve(assessmentResult);
                     } else {
+                        console.error("Speech not recognized. Reason:", result.reason);
                         speechRecognizer.close();
                         reject(new Error("Speech not recognized. Reason: " + result.reason));
                     }
