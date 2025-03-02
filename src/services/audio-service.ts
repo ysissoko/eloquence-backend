@@ -34,13 +34,12 @@ export async function downloadAudioFile(audioUrl: string): Promise<stream.Readab
  * - Format: WAV
  */
 export async function convertAudioToPushStream(audioUrl: string): Promise<AudioConfig> {
-    let pushStream: PushAudioInputStream | null = null;
     let tempInput: string | null = null;
     let tempOutput: string | null = null;
 
     try {
         const tempOutputFilename = `temp-output-${Date.now()}.wav`;
-        const tempInputFilename = `temp-input-${Date.now()}.m4a`
+        const tempInputFilename = `temp-input-${Date.now()}.m4a`;
 
         // Create temporary input and output files
         tempInput = path.join(tmpdir(), tempInputFilename);
@@ -72,7 +71,7 @@ export async function convertAudioToPushStream(audioUrl: string): Promise<AudioC
 
         console.log("Conversion finished successfully");
 
-        const audioConfig: AudioConfig = AudioConfig.fromStreamInput(filePushStream.openPushStream(tempOutputFilename));
+        const audioConfig: AudioConfig = AudioConfig.fromStreamInput(filePushStream.openPushStream(tempOutput));
         return audioConfig;
     } catch (err) {
         console.error("Conversion failed:", err);
