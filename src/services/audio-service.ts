@@ -83,12 +83,6 @@ export async function convertAudioToPushStream(audioUrl: string): Promise<AudioC
                 if (err) console.error(`Failed to delete temp input file: ${err.message}`);
             });
         }
-
-        // if (tempOutput) {
-        //     unlink(tempOutput, (err) => {
-        //         if (err) console.error(`Failed to delete temp output file: ${err.message}`);
-        //     });
-        // }
     }
 }
 // New function to create a read stream from a local file
