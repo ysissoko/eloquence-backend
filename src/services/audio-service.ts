@@ -1,11 +1,12 @@
 import axios from "axios";
 import { createReadStream, createWriteStream, unlink } from "fs"; // updated import
-import { AudioInputStream, PushAudioInputStream } from "microsoft-cognitiveservices-speech-sdk";
+import { AudioConfig, AudioInputStream, AudioStreamFormat, PushAudioInputStream } from "microsoft-cognitiveservices-speech-sdk";
 import stream from "stream";
 import { tmpdir } from "os";
 import path from "path";
 import { promisify } from "util";
 import { exec } from "child_process";
+import * as filePushStream from "./file-push-stream";
 
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 const execPromise = promisify(exec);
@@ -32,15 +33,18 @@ export async function downloadAudioFile(audioUrl: string): Promise<stream.Readab
  * - Sample rate: 16kHz
  * - Format: WAV
  */
-export async function convertAudioToPushStream(audioUrl: string): Promise<AudioInputStream> {
+export async function convertAudioToPushStream(audioUrl: string): Promise<AudioConfig> {
     let pushStream: PushAudioInputStream | null = null;
     let tempInput: string | null = null;
     let tempOutput: string | null = null;
 
     try {
+        const tempOutputFilename = `temp-output-${Date.now()}.wav`;
+        const tempInputFilename = `temp-input-${Date.now()}.m4a`
+
         // Create temporary input and output files
-        tempInput = path.join(tmpdir(), `temp-input-${Date.now()}.m4a`);
-        tempOutput = path.join(tmpdir(), `temp-output-${Date.now()}.wav`);
+        tempInput = path.join(tmpdir(), tempInputFilename);
+        tempOutput = path.join(tmpdir(), tempOutputFilename);
 
         // Download the audio file
         console.log(`Downloading audio from ${audioUrl} to ${tempInput}`);
@@ -68,35 +72,10 @@ export async function convertAudioToPushStream(audioUrl: string): Promise<AudioI
 
         console.log("Conversion finished successfully");
 
-        // Create a push stream from the converted output file
-        pushStream = AudioInputStream.createPushStream();
-
-        // Read the WAV file and push its content to the stream
-        const convertedStream = createReadStream(tempOutput);
-
-        await new Promise<void>((resolve, reject) => {
-            convertedStream.on("data", (chunk: Buffer | string) => {
-                console.log(`Pushing chunk of ${chunk.length} bytes to stream`);
-                pushStream?.write(chunk as Buffer);
-            });
-
-            convertedStream.on("end", () => {
-                console.log("File reading complete, closing push stream");
-                pushStream?.close();
-                resolve();
-            });
-
-            convertedStream.on("error", (err) => {
-                reject(new Error(`Error reading converted file: ${err.message}`));
-            });
-        });
-
-        return pushStream;
+        const audioConfig: AudioConfig = AudioConfig.fromStreamInput(filePushStream.openPushStream(tempOutputFilename));
+        return audioConfig;
     } catch (err) {
         console.error("Conversion failed:", err);
-        // Clean up resources on error
-        pushStream?.close();
-
         throw err instanceof Error ? err : new Error(String(err));
     } finally {
         // Clean up temporary files

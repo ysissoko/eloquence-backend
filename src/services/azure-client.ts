@@ -2,6 +2,7 @@ import { SpeechConfig, SpeechSynthesisOutputFormat, SpeechSynthesizer, AudioConf
 import { v4 as uuidv4 } from 'uuid';
 import uploadAudioFile from './uploader';
 import { convertAudioToPushStream } from './audio-service';
+import { format } from 'path';
 
 export type SpeechAssessmentResult = {
     referenceText: string;
@@ -23,15 +24,18 @@ export default class AzureClient {
     }
 
     async speechAssessment(referenceText: string, audioUrl: string): Promise<SpeechAssessmentResult> {
+
+        // now create the audio-config pointing to our stream and
+
         // Télécharger l'audio et le convertir en WAV
-        const wavStream: AudioInputStream = await convertAudioToPushStream(audioUrl);
+        const audioConfig: AudioConfig = await convertAudioToPushStream(audioUrl);
+
         console.log("Audio converted to WAV");
-        const audioConfig: AudioConfig = AudioConfig.fromStreamInput(wavStream);
         const speechRecognizer = new SpeechRecognizer(this.speechConfig, audioConfig);
         const pronunciationAssessmentConfig = new PronunciationAssessmentConfig(
             referenceText,
             PronunciationAssessmentGradingSystem.HundredMark,
-            PronunciationAssessmentGranularity.Phoneme,
+            PronunciationAssessmentGranularity.Word,
             true
         );
 
